@@ -1,0 +1,4 @@
+
+
+class NoneSessionError(Exception):
+    pass

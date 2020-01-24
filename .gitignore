@@ -1,0 +1,10 @@
+*.py[cod]
+*$py.class
+.log
+__pycache__/
+.idea/
+Procfile.windows
+.pytest_cache/
+
+# Environments
+venv/
