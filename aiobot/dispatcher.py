@@ -16,7 +16,6 @@ class Dispatcher(ContextInstanceMixin):
         self.bot = bot
         self.handlers: List[Handler] = []
         self.tasks: List[asyncio.Task] = []
-        self._closed = False
 
     def add_handler(self, handler: Handler) -> None:
         self.handlers.append(handler)
@@ -25,30 +24,18 @@ class Dispatcher(ContextInstanceMixin):
         self.handlers.remove(handler)
 
     async def _process_update(self, update: Update):
+        # TODO может сделать поиск handler отдельно?
         for handler in self.handlers:
-            # TODO mb unite 'handle' and 'check' into one function?
             if handler.check_update(update):
                 handler.handle_update(update, self.bot)
                 break
 
-    @staticmethod
-    def process_done_task(task):
-        try:
-            task.result()
-        except asyncio.CancelledError:
-            pass
-
-    def close(self):
-        self._closed = True
-        # закрывать задачи обработки событий?
-
     async def start(self, update_queue: asyncio.Queue):
-        while not self._closed:
+        while True:
             try:
                 update_dict = await update_queue.get()
                 update = Update.from_dict(update_dict)
                 task = asyncio.create_task(self._process_update(update))
-                task.add_done_callback(self.process_done_task)
                 self.tasks.append(task)
 
             except Exception as error:

@@ -1,4 +1,4 @@
-from typing import Callable, Optional, List
+from typing import Callable, Dict, List, Optional
 from .bot import VkBot
 from .objects import Update, VkEventType
 from .utils import ContextInstanceMixin
@@ -66,38 +66,23 @@ class ReplyMessageHandler(Handler):
 
 class State(ContextInstanceMixin):
     # TODO StatesGroup и объединить в них все состояния, точки входа, выхода и т.д.
-    def __init__(self, handlers: List[BaseHandler] = (), name: str = None):
-        self.name = name
-        self.handlers = handlers
-
-    def __hash__(self):
-        if self.name is None:
-            return id(self)
-        else:
-            return hash(self.name)
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
-
-    def __repr__(self):
-        return f'<State: {self.name=}, {self.handlers=}>'
+    pass
 
 
 class FsmHandler(BaseHandler):
-    END_STATE = State(name='FSM_END_STATE')
+    END = -1
 
     def __init__(self,
-                 entry_points: State,
-                 fallbacks: State,
+                 entry_points: List[Handler],
+                 states: Dict[State, List[Handler]],
+                 fallbacks: List[Handler],
                  allow_reentry: bool = False):
         self.entry_points = entry_points
+        self.states = states
         self.fallbacks = fallbacks
         self.allow_reentry = allow_reentry
 
         self.conversations = {}
-
-    def get_state(self, user):
-        return self.conversations.get(user, self.entry_points)
 
     def check_update(self, update) -> bool:
         # TODO peer_id, user_id и chat_id - разные вещи, надо это учитывать
@@ -105,27 +90,30 @@ class FsmHandler(BaseHandler):
             return False
         else:
             user = update.message.peer_id
-            current_state = self.get_state(user)
             handlers_per_user = []
-            handlers_per_user.extend(current_state.handlers)
+            if user in self.conversations:
+                current_state = self.conversations.get(user)
+                # TODO похоже и не надо
+                State.set_current(current_state)
 
-            if current_state != self.entry_points and self.allow_reentry:
-                handlers_per_user.extend(self.entry_points.handlers)
+                handlers_per_user.extend(self.states.get(current_state))
+                handlers_per_user.extend(self.fallbacks)
 
-            handlers_per_user.extend(self.fallbacks.handlers)
+            if (user not in self.conversations) or self.allow_reentry:
+                handlers_per_user.extend(self.entry_points)
 
             for handler in handlers_per_user:
                 if handler.check_update(update):
-                    BaseHandler.set_current(handler)
+                    self.set_current(self)
                     return True
 
-    def handle_update(self, update: Update, bot: VkBot) -> Optional[State]:
+    def handle_update(self, update: Update, bot: VkBot) -> Optional[int]:
         # TODO здесь хорошо сделать через StatesGroup просто изменение состояния, без поиска
         # current_state = State.get_current()
-        handler = BaseHandler.get_current()
+        handler = self.get_current()
         new_state = handler.handle_update(update, bot)
-        if new_state is not None and new_state != self.END_STATE:
+        if new_state is not None and new_state != self.END:
             self.conversations[update.message.peer_id] = new_state
-        elif new_state == self.END_STATE:
+        else:
             del self.conversations[update.message.peer_id]
         return

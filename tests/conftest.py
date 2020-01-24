@@ -1,12 +1,9 @@
 import pytest
 import asyncio
-import aiohttp
-
-from aiobot import Update, VkBot
 
 
 @pytest.fixture(scope='session')
-def raw_new_message_update():
+def new_message_update():
     message_new = {'type': 'message_new',
                    'object': {
                        'message': {'date': 1577062062, 'from_id': 38895814,
@@ -24,36 +21,7 @@ def raw_new_message_update():
 
 
 @pytest.fixture(scope='session')
-def new_message_update(raw_new_message_update):
-    return Update.from_dict(raw_new_message_update)
-
-
-@pytest.fixture(scope='session')
-def bot_records():
-    return {'group_id': '123', 'access_token': '2141:abc', 'v': '5.103'}
-
-
-@pytest.fixture(scope='module')
+@pytest.mark.asyncio
 async def empty_update_queue() -> asyncio.Queue:
     queue = asyncio.Queue()
     return queue
-
-
-@pytest.fixture(scope='session')
-async def client_session():
-    async with aiohttp.ClientSession() as session:
-        yield session
-
-
-@pytest.fixture(scope='module')
-def dummy_bot(bot_records, client_session):
-    bot = VkBot(**bot_records)
-    bot.set_session(client_session)
-    return bot
-
-
-@pytest.fixture(scope='session')
-def event_loop():
-    loop = asyncio.get_event_loop()
-    yield loop
-    loop.close()
