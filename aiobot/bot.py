@@ -41,7 +41,6 @@ class VkBot:
                 try:
                     result = task.result()
                     if 'error_code' in result:
-                        # if result.get('error_code', None) is not None:
                         # TODO добавить дебаг режим, без которого ошибки просто пишутся в лог
                         raise VkError(result['error_code'],
                                       result.get('error_message', None),
