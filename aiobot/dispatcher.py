@@ -24,7 +24,6 @@ class Dispatcher(ContextInstanceMixin):
         self.handlers.remove(handler)
 
     async def _process_update(self, update: Update):
-        # TODO может сделать поиск handler отдельно?
         for handler in self.handlers:
             if handler.check_update(update):
                 handler.handle_update(update, self.bot)
