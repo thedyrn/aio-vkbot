@@ -1,9 +1,9 @@
 import pytest
-from aiobot import State, FsmHandler, Handler, Update, VkBot
+from aiobot import State, FsmHandler, BaseHandler, Update, VkBot
 
 
-class PseudoHandler:
-    def __init__(self, check=False, handle='None'):
+class PseudoHandler(BaseHandler):
+    def __init__(self, check=False, handle=None):
         self.check = check
         self.handle = handle
 
@@ -14,10 +14,10 @@ class PseudoHandler:
         return self.handle
 
 
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def dummy_state():
-    return State(handlers=[PseudoHandler(), PseudoHandler(check=True, handle=State(PseudoHandler(), name='test')),
-                           PseudoHandler()], name='dummy')
+    return State(handlers=[PseudoHandler(), PseudoHandler(check=True, handle=State([PseudoHandler()], name='test'))],
+                 name='dummy')
 
 
 @pytest.fixture(scope='module')
@@ -33,11 +33,18 @@ def dummy_user(raw_new_message_update):
 def test_states(dummy_state, raw_new_message_update):
     # TODO State it's subclass of Handler???
     test_state = dummy_state
-    assert test_state.check_update(raw_new_message_update)
+    test_state2 = State(name='test')
+    assert test_state.name == 'dummy'
+    assert test_state2.name == 'test'
 
 
 def test_states_eq():
-    assert State(name='test') == State(PseudoHandler(), name='test')
+    assert State(name='test') == State([PseudoHandler()], name='test')
+
+
+def test_states_hash(dummy_state):
+    assert hash(State()) != hash(State())
+    assert hash(dummy_state) == hash(State(name='dummy'))
 
 
 def test_fsm_default(dummy_fsm, dummy_user, dummy_state):
@@ -48,15 +55,13 @@ def test_fsm_default(dummy_fsm, dummy_user, dummy_state):
 def test_state_response(dummy_fsm, new_message_update, dummy_user, dummy_bot):
     fsm = dummy_fsm
     assert fsm.check_update(new_message_update)
-    test_state = State(PseudoHandler(), name='test')
-    assert fsm.handle_update(new_message_update, dummy_bot) == test_state
+    test_state = State([PseudoHandler()], name='test')
+    fsm.handle_update(new_message_update, dummy_bot)
+    assert BaseHandler.get_current().handle_update(new_message_update, dummy_bot) == test_state
     assert fsm.get_state(dummy_user) == test_state
 
 
-def test_end_state(dummy_fsm):
-    assert dummy_fsm.EndState == dummy_fsm.EntryState
-
-
-def test_fallbacks(dummy_state, dummy_bot, new_message_update):
-    fsm = FsmHandler(entry_points=State(PseudoHandler()), fallbacks=dummy_state)
-    assert fsm.handle_update(new_message_update, dummy_bot) == State(name='test')
+def test_fallbacks(dummy_state, dummy_bot, new_message_update, dummy_user):
+    fsm = FsmHandler(entry_points=State([PseudoHandler()]), fallbacks=dummy_state)
+    fsm.handle_update(new_message_update, dummy_bot)
+    assert fsm.get_state(dummy_user) == State(name='test')
