@@ -25,6 +25,7 @@ class Dispatcher(ContextInstanceMixin):
 
     async def _process_update(self, update: Update):
         for handler in self.handlers:
+            # TODO mb unite 'handle' and 'check' into one function?
             if handler.check_update(update):
                 handler.handle_update(update, self.bot)
                 break
