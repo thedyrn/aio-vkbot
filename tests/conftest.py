@@ -1,9 +1,11 @@
 import pytest
 import asyncio
 
+from aiobot import Update, VkBot
+
 
 @pytest.fixture(scope='session')
-def new_message_update():
+def raw_new_message_update():
     message_new = {'type': 'message_new',
                    'object': {
                        'message': {'date': 1577062062, 'from_id': 38895814,
@@ -18,6 +20,16 @@ def new_message_update():
                    'group_id': 20350423,
                    'event_id': '549e36ec9c50fa7a28af9cbe4a2441f06688dd24'}
     return message_new
+
+
+@pytest.fixture(scope='session')
+def new_message_update(raw_new_message_update):
+    return Update.from_dict(raw_new_message_update)
+
+
+@pytest.fixture(scope='session')
+def dummy_bot():
+    return VkBot('123', '2141:abc', '5.103')
 
 
 @pytest.fixture(scope='session')

@@ -26,14 +26,14 @@ def dummy_fsm(dummy_state):
 
 
 @pytest.fixture(scope='module')
-def dummy_user(new_message_update):
-    return new_message_update['object']['message']['peer_id']
+def dummy_user(raw_new_message_update):
+    return raw_new_message_update['object']['message']['peer_id']
 
 
-def test_states(dummy_state, new_message_update):
+def test_states(dummy_state, raw_new_message_update):
     # TODO State it's subclass of Handler???
     test_state = dummy_state
-    assert test_state.check_update(new_message_update)
+    assert test_state.check_update(raw_new_message_update)
 
 
 def test_states_eq():
@@ -42,17 +42,21 @@ def test_states_eq():
 
 def test_fsm_default(dummy_fsm, dummy_user, dummy_state):
     fsm = dummy_fsm
-    assert fsm.conversations.get(dummy_user) == dummy_state
+    assert fsm.get_state(dummy_user) == dummy_state
 
 
-def test_state_response(dummy_fsm, new_message_update, dummy_user):
+def test_state_response(dummy_fsm, new_message_update, dummy_user, dummy_bot):
     fsm = dummy_fsm
-    update = Update.from_dict(new_message_update)
-    assert fsm.check_update(update)
+    assert fsm.check_update(new_message_update)
     test_state = State(PseudoHandler(), name='test')
-    assert fsm.handle_update(update, VkBot('123', '2141:abc', '5.103')) == test_state
-    assert fsm.conversations.get(dummy_user) == test_state
+    assert fsm.handle_update(new_message_update, dummy_bot) == test_state
+    assert fsm.get_state(dummy_user) == test_state
 
 
 def test_end_state(dummy_fsm):
     assert dummy_fsm.EndState == dummy_fsm.EntryState
+
+
+def test_fallbacks(dummy_state, dummy_bot, new_message_update):
+    fsm = FsmHandler(entry_points=State(PseudoHandler()), fallbacks=dummy_state)
+    assert fsm.handle_update(new_message_update, dummy_bot) == State(name='test')

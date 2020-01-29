@@ -7,9 +7,9 @@ from aiobot import Dispatcher, MessageHandler
 
 @pytest.fixture
 @pytest.mark.asyncio
-async def queue_with_event(new_message_update):
+async def queue_with_event(raw_new_message_update):
     queue = asyncio.Queue()
-    await queue.put(new_message_update)
+    await queue.put(raw_new_message_update)
     return queue
 
 

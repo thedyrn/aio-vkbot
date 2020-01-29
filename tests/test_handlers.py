@@ -4,8 +4,8 @@ from aiobot import Handler, MessageHandler, CommandHandler, VkEventType, Update
 
 
 @pytest.fixture
-def update_from_dict(new_message_update):
-    return Update.from_dict(new_message_update)
+def update_from_dict(raw_new_message_update):
+    return Update.from_dict(raw_new_message_update)
 
 
 def test_handler(update_from_dict):
