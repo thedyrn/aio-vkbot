@@ -85,7 +85,6 @@ class State(ContextInstanceMixin):
 
 class FsmHandler(BaseHandler):
     END_STATE = State(name='FSM_END_STATE')
-    ENTRY_STATE = State(name='FSM_ENTRY_STATE')
 
     def __init__(self,
                  entry_points: State,
