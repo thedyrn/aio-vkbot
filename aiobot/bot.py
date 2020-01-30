@@ -6,7 +6,7 @@ import time
 from collections import deque
 import logging
 
-from .constants import API_URL
+from .constants import API_URL, MAX_RANDOM_ID
 from .exceptions import VkError, NoneSessionError
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class VkBot:
             'forward_messages': forward_messages, 'sticker_id': sticker_id,
             'payload': payload, 'keyboard': keyboard, 'dont_parse_links': dont_parse_links,
             'disable_mentions': disable_mentions, 'intent': intent,
-            'random_id': str(random.randint(0, 2 << 60)),  # random_id до int64
+            'random_id': str(random.randint(0, MAX_RANDOM_ID)),
             'group_id': self.group_id, 'access_token': self.access_token, 'v': self.api_version
         }
         params = {key: value for key, value in params.items() if value is not None}
