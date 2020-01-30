@@ -31,7 +31,6 @@ def dummy_user(raw_new_message_update):
 
 
 def test_states(dummy_state, raw_new_message_update):
-    # TODO State it's subclass of Handler???
     test_state = dummy_state
     test_state2 = State(name='test')
     assert test_state.name == 'dummy'
