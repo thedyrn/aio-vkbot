@@ -34,8 +34,7 @@ class VkBot:
                 continue
 
             task: asyncio.Task = self.tasks.popleft()
-            # TODO может стоит сделать 'await task_name' ?
-            # TODO сделать обработку задач по готовности, в asyncio есть что-то подобное
+            # TODO сделать обработку задач по готовности, asyncio.as_completed()
 
             if task.done():
                 try:
@@ -69,7 +68,7 @@ class VkBot:
                      forward_messages: List[str] = None,
                      sticker_id: str = None,
                      payload: str = None,
-                     keyboard: dict = None,
+                     keyboard: str = None,
                      dont_parse_links: bool = None,
                      disable_mentions: bool = None,
                      intent: str = None):
@@ -121,7 +120,6 @@ class VkBot:
         # if (result.get('response', None) is None or
         #         result.get('message_id', None) is None):
         if 'response' in result or 'message_id' in result:
-            # TODO найти как переделать боле лаконично
             # Нельзя верить документации вк
             return result
         else:

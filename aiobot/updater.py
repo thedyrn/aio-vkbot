@@ -23,7 +23,6 @@ class Updater:
                     await self.update_queue.put(update)
 
     async def _start(self):
-        # TODO сделать maxsize
         self.update_queue = asyncio.Queue()
 
         tasks = [self._start_polling(),
