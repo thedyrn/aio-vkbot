@@ -24,7 +24,6 @@ class Action:
         return self.__dict__
 
 
-# TODO добавить __slots__
 @dataclass
 class TextAction(Action):
     label: str
@@ -34,6 +33,7 @@ class TextAction(Action):
 
 @dataclass
 class OpenLinkAction(Action):
+    __slots__ = []
     label: str
     link: str
     type: str = 'open_link'
