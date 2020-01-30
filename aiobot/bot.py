@@ -27,7 +27,6 @@ class VkBot:
         logger.info('Set the session')
 
     async def manage_tasks(self):
-        # TODO следить за закрытием всех задач
         while True:
             await asyncio.sleep(0.1)
             if len(self.tasks) == 0:
@@ -44,7 +43,6 @@ class VkBot:
                         raise VkError(result['error_code'],
                                       result.get('error_message', None),
                                       result.get('request_params', None))
-                        # TODO сделать ошибки поточнее
                 except asyncio.CancelledError:
                     pass
                 except asyncio.InvalidStateError:
@@ -78,15 +76,6 @@ class VkBot:
                                keyboard, dont_parse_links, disable_mentions, intent))
         self.tasks.append(send_msg_task)
 
-    def get_users_sync(self, users: list):
-        # TODO не работает
-        get_users_task = asyncio.create_task(self._get_users(users))
-        while True:
-            if get_users_task.done():
-                return get_users_task.result()
-            else:
-                time.sleep(0.05)
-
     async def _send_message(self,
                             peer_id: str,
                             message: str,
@@ -105,27 +94,22 @@ class VkBot:
                             dont_parse_links: bool = None,
                             disable_mentions: bool = None,
                             intent: str = None) -> dict:
-        # TODO kwargs?!
         params = {
             'user_id': user_id, 'peer_id': peer_id, 'domain': domain, 'chat_id': chat_id, 'user_ids': user_ids,
             'message': message, 'lat': lat, 'lon': lon, 'attachment': attachment, 'reply_to': reply_to,
             'forward_messages': forward_messages, 'sticker_id': sticker_id,
             'payload': payload, 'keyboard': keyboard, 'dont_parse_links': dont_parse_links,
             'disable_mentions': disable_mentions, 'intent': intent,
-            'random_id': str(random.randint(0, 10 ** 6)),
+            'random_id': str(random.randint(0, 2 << 60)),  # random_id до int64
             'group_id': self.group_id, 'access_token': self.access_token, 'v': self.api_version
         }
         params = {key: value for key, value in params.items() if value is not None}
         result = await self._request('messages.send', params)
-        # if (result.get('response', None) is None or
-        #         result.get('message_id', None) is None):
         if 'response' in result or 'message_id' in result:
             # Нельзя верить документации вк
             return result
         else:
             pass
-        # TODO проверка доставки сообщения
-        # TODO проверка на ошибки и доставку, (?) random_id сделать получше
 
     async def _update_long_poll_server(self):
         params = {'group_id': self.group_id, 'access_token': self.access_token, 'v': self.api_version}
@@ -136,7 +120,7 @@ class VkBot:
         logger.info('VkBot._get_updates() - Check updates')
         if self.server is None or self.key is None:
             await self._update_long_poll_server()
-            # TODO локальных переменных не хватит? get_updates(self, key, server, ts, session)
+            # локальных переменных не хватит? get_updates(self, key, server, ts, session)
 
         params = {'act': 'a_check', 'key': self.key, 'ts': self.ts, 'wait': wait}
         res = await self._request(url=self.server, params=params, method='')
@@ -152,6 +136,7 @@ class VkBot:
             return updates
 
     async def _get_users(self, user_ids: list, fields: list = None, name_case: str = None):
+        # не протестировано
         params = {'user_ids': ','.join(user_ids),
                   'group_id': self.group_id,
                   'access_token': self.access_token,
