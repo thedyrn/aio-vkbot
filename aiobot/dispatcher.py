@@ -31,6 +31,13 @@ class Dispatcher(ContextInstanceMixin):
                 handler.handle_update(update, self.bot)
                 break
 
+    @staticmethod
+    def process_done_task(task):
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+
     def close(self):
         self._closed = True
 
@@ -40,6 +47,7 @@ class Dispatcher(ContextInstanceMixin):
                 update_dict = await update_queue.get()
                 update = Update.from_dict(update_dict)
                 task = asyncio.create_task(self._process_update(update))
+                task.add_done_callback(self.process_done_task)
                 self.tasks.append(task)
 
             except Exception as error:
