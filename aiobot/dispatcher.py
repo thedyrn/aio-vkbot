@@ -16,6 +16,7 @@ class Dispatcher(ContextInstanceMixin):
         self.bot = bot
         self.handlers: List[Handler] = []
         self.tasks: List[asyncio.Task] = []
+        self._closed = False
 
     def add_handler(self, handler: Handler) -> None:
         self.handlers.append(handler)
@@ -30,8 +31,11 @@ class Dispatcher(ContextInstanceMixin):
                 handler.handle_update(update, self.bot)
                 break
 
+    def close(self):
+        self._closed = True
+
     async def start(self, update_queue: asyncio.Queue):
-        while True:
+        while not self._closed:
             try:
                 update_dict = await update_queue.get()
                 update = Update.from_dict(update_dict)
