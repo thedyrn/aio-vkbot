@@ -2,7 +2,6 @@ import random
 import asyncio
 from aiohttp import ClientSession
 from typing import List
-import time
 from collections import deque
 import logging
 
@@ -17,8 +16,11 @@ class VkBot:
         self.group_id = group_id
         self.access_token = access_token
         self.api_version = v
+
         self.session = None
         self.tasks = deque([])
+        self.tasks_lock = asyncio.Lock()
+        self._closed = False
 
         self.key, self.server, self.ts = None, None, None
 
@@ -26,18 +28,25 @@ class VkBot:
         self.session = session
         logger.info('Set the session')
 
+    def close(self):
+        asyncio.create_task(asyncio.shield(self._close()))
+
+    async def _close(self):
+        self._closed = True
+        async with self.tasks_lock:
+            for task in self.tasks:
+                task.cancel()
+                # Стоит дожидаться завершения?
+
     async def manage_tasks(self):
-        while True:
-            await asyncio.sleep(0.1)
-            if len(self.tasks) == 0:
-                continue
+        while not self._closed:
+            async with self.tasks_lock:
+                working_tasks = self.tasks
+                self.tasks.clear()
 
-            task: asyncio.Task = self.tasks.popleft()
-            # TODO сделать обработку задач по готовности, asyncio.as_completed()
-
-            if task.done():
+            for task in asyncio.as_completed(working_tasks):
                 try:
-                    result = task.result()
+                    result = await task
                     if 'error_code' in result:
                         # TODO добавить дебаг режим, без которого ошибки просто пишутся в лог
                         raise VkError(result['error_code'],
@@ -45,12 +54,31 @@ class VkBot:
                                       result.get('request_params', None))
                 except asyncio.CancelledError:
                     pass
-                except asyncio.InvalidStateError:
-                    # Not yet
-                    self.tasks.append(task)
-                # Обрабатывать больше ошибок?
-            else:
-                self.tasks.append(task)
+            # await asyncio.sleep(0.1)
+            # if len(self.tasks) == 0:
+            #     continue
+            #
+            # task: asyncio.Task = self.tasks.popleft()
+            #
+            # if task.done():
+            #     try:
+            #         result = task.result()
+            #         if 'error_code' in result:
+            #             raise VkError(result['error_code'],
+            #                           result.get('error_message', None),
+            #                           result.get('request_params', None))
+            #     except asyncio.CancelledError:
+            #         pass
+            #     except asyncio.InvalidStateError:
+            #         # Not yet
+            #         self.tasks.append(task)
+            #     # Обрабатывать больше ошибок?
+            # else:
+            #     self.tasks.append(task)
+
+    def add_task(self, task):
+        async with self.tasks_lock:
+            self.tasks.append(task)
 
     def send_message(self,
                      peer_id: str,
@@ -74,7 +102,7 @@ class VkBot:
             self._send_message(peer_id, message, user_id, domain, chat_id, user_ids, lat, lon,
                                attachment, reply_to, forward_messages, sticker_id, payload,
                                keyboard, dont_parse_links, disable_mentions, intent))
-        self.tasks.append(send_msg_task)
+        self.add_task(send_msg_task)
 
     async def _send_message(self,
                             peer_id: str,
