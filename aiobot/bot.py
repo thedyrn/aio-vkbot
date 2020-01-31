@@ -77,6 +77,18 @@ class VkBot:
             #     self.tasks.append(task)
 
     def add_task(self, task):
+        if not self._closed:
+            asyncio.create_task(asyncio.shield(self._add_task(task)))
+
+    async def _add_task(self, task):
+
+        def done_callback(done_task):
+            try:
+                done_task.result()
+            except asyncio.CancelledError:
+                pass
+
+        task.add_done_callback(done_callback)
         async with self.tasks_lock:
             self.tasks.append(task)
 
