@@ -41,7 +41,7 @@ class VkBot:
     async def manage_tasks(self):
         while not self._closed:
             async with self.tasks_lock:
-                working_tasks = self.tasks
+                working_tasks = self.tasks.copy()
                 self.tasks.clear()
 
             for task in asyncio.as_completed(working_tasks):
