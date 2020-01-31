@@ -18,14 +18,14 @@ class VkBot:
         self.api_version = v
 
         self.session = None
-        self.tasks = deque([])
-        self.tasks_lock = asyncio.Lock()
-        self._closed = False
+        self.tasks: deque = deque([])
+        self.tasks_lock: asyncio.Lock = asyncio.Lock()
+        self._closed: bool = False
 
         self.key, self.server, self.ts = None, None, None
 
     def set_session(self, session: ClientSession) -> None:
-        self.session = session
+        self.session: ClientSession = session
         logger.info('Set the session')
 
     def close(self):
