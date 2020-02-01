@@ -44,9 +44,9 @@ class VkBot:
                 working_tasks = self.tasks.copy()
                 self.tasks.clear()
 
-            for task in asyncio.as_completed(working_tasks):
+            for completed_task in asyncio.as_completed(working_tasks):
                 try:
-                    result = await task
+                    result = await completed_task
                     if 'error_code' in result:
                         # TODO добавить дебаг режим, без которого ошибки просто пишутся в лог
                         raise VkError(result['error_code'],
@@ -81,7 +81,6 @@ class VkBot:
             asyncio.create_task(asyncio.shield(self._add_task(task)))
 
     async def _add_task(self, task):
-
         def done_callback(done_task):
             try:
                 done_task.result()
