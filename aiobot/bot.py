@@ -164,6 +164,7 @@ class VkBot:
         params = {'act': 'a_check', 'key': self.key, 'ts': self.ts, 'wait': wait}
         res = await self._request(url=self.server, params=params, method='')
         if 'failed' in res:
+            # TODO remove hardcoded constants
             if res['failed'] == 1:
                 self.ts = res['ts']
                 return await self.get_updates()
