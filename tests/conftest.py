@@ -28,8 +28,13 @@ def new_message_update(raw_new_message_update):
 
 
 @pytest.fixture(scope='session')
-def dummy_bot():
-    return VkBot('123', '2141:abc', '5.103')
+def bot_records():
+    return {'group_id': '123', 'access_token': '2141:abc', 'v': '5.103'}
+
+
+@pytest.fixture(scope='session')
+def dummy_bot(bot_records):
+    return VkBot(**bot_records)
 
 
 @pytest.fixture(scope='session')
