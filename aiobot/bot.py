@@ -5,7 +5,7 @@ from typing import List
 from collections import deque
 import logging
 
-from .constants import API_URL, MAX_RANDOM_ID
+from .constants import *
 from .exceptions import VkError, NoneSessionError
 
 logger = logging.getLogger(__name__)
@@ -155,7 +155,7 @@ class VkBot:
         resp = await self._request('groups.getLongPollServer', params)
         self.key, self.server, self.ts = resp['response'].values()
 
-    async def get_updates(self, wait: int = 25) -> list:
+    async def get_updates(self, wait: int = TIMEOUT_FOR_POLLING) -> list:
         logger.info('VkBot._get_updates() - Check updates')
         if self.server is None or self.key is None:
             await self._update_long_poll_server()
