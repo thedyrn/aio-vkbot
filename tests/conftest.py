@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import aiohttp
 
 from aiobot import Update, VkBot
 
@@ -42,3 +43,10 @@ def dummy_bot(bot_records):
 async def empty_update_queue() -> asyncio.Queue:
     queue = asyncio.Queue()
     return queue
+
+
+@pytest.fixture(scope='session')
+@pytest.mark.asyncio
+async def client_session():
+    async with aiohttp.ClientSession() as session:
+        yield session
