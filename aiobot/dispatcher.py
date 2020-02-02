@@ -40,6 +40,7 @@ class Dispatcher(ContextInstanceMixin):
 
     def close(self):
         self._closed = True
+        # закрывать задачи обработки событий?
 
     async def start(self, update_queue: asyncio.Queue):
         while not self._closed:
