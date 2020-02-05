@@ -48,9 +48,10 @@ async def test_update_long_poll_server(dummy_bot):
     key, server, ts = '123124abc:key', 'https://api.vk.com/method/', '700'
     async with FakeVk({'response': {'key': key, 'server': server, 'ts': ts}}):
         await dummy_bot._update_long_poll_server()
-        assert dummy_bot.server == server
-        assert dummy_bot.key == key
-        assert dummy_bot.ts == ts
+
+    assert dummy_bot.server == server
+    assert dummy_bot.key == key
+    assert dummy_bot.ts == ts
 
 
 @pytest.mark.asyncio
@@ -59,7 +60,8 @@ async def test_get_updates(dummy_bot):
     response = {"ts": "701", "updates": updates}
     async with FakeVk(response):
         res = await dummy_bot.get_updates()
-        assert res == updates
+
+    assert res == updates
 
 
 @pytest.mark.asyncio
