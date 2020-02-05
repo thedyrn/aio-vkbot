@@ -144,16 +144,17 @@ class VkBot:
         }
         params = {key: value for key, value in params.items() if value is not None}
         result = await self._request('messages.send', params)
-        if 'response' in result or 'message_id' in result:
-            # Нельзя верить документации вк
-            return result
-        else:
-            pass
+        return result
+        # if 'response' in result or 'message_id' in result:
+        #     # Нельзя верить документации вк
+        #     return result
+        # else:
+        #     pass
 
     async def _update_long_poll_server(self):
         params = {'group_id': self.group_id, 'access_token': self.access_token, 'v': self.api_version}
         resp = await self._request('groups.getLongPollServer', params)
-        self.key, self.server, self.ts = resp['response'].values()
+        self.key, self.server, self.ts = resp['response'].values()  # TODO стоит переделать в чистую функцию?
 
     async def get_updates(self, wait: int = TIMEOUT_FOR_POLLING) -> list:
         logger.info('VkBot._get_updates() - Check updates')
