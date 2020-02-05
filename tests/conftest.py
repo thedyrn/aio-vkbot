@@ -33,20 +33,27 @@ def bot_records():
     return {'group_id': '123', 'access_token': '2141:abc', 'v': '5.103'}
 
 
-@pytest.fixture(scope='session')
-def dummy_bot(bot_records):
-    return VkBot(**bot_records)
-
-
-@pytest.fixture(scope='session')
-@pytest.mark.asyncio
+@pytest.fixture(scope='module')
 async def empty_update_queue() -> asyncio.Queue:
     queue = asyncio.Queue()
     return queue
 
 
 @pytest.fixture(scope='session')
-@pytest.mark.asyncio
 async def client_session():
     async with aiohttp.ClientSession() as session:
         yield session
+
+
+@pytest.fixture(scope='module')
+def dummy_bot(bot_records, client_session):
+    bot = VkBot(**bot_records)
+    bot.set_session(client_session)
+    return bot
+
+
+@pytest.fixture(scope='session')
+def event_loop():
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
