@@ -27,4 +27,6 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest
+        pip install aresponses
+        pip install pytest-asyncio
+        pytest -v
